@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outfit Curator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0a0810;
+  --surface: #110e1a;
+  --border:  #221a34;
+  --accent:  #c084fc;
+  --accent2: #f0abfc;
+  --gold:    #f5c97a;
+  --text:    #f3eeff;
+  --muted:   #7a6d90;
+  --dim:     #4a4060;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 0 48px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(10, 8, 16, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--accent2);
+  letter-spacing: -0.3px;
+  display: flex; align-items: center; gap: 8px;
+  text-decoration: none;
+}
+.nav-links {
+  display: flex; gap: 32px; list-style: none;
+}
+.nav-links a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.4px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-cta:hover { background: var(--accent); color: #0a0810; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 100px 24px 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient glow blobs */
+.hero::before, .hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.18;
+  pointer-events: none;
+}
+.hero::before {
+  width: 600px; height: 600px;
+  background: #7c3aed;
+  top: -100px; left: -150px;
+  animation: drift 14s ease-in-out infinite alternate;
+}
+.hero::after {
+  width: 500px; height: 500px;
+  background: #a855f7;
+  bottom: -80px; right: -100px;
+  animation: drift 18s ease-in-out infinite alternate-reverse;
+}
+@keyframes drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(40px, 30px); }
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(192,132,252,0.08);
+  border: 1px solid rgba(192,132,252,0.2);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 32px;
+  position: relative; z-index: 1;
+}
+.eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2px;
+  position: relative; z-index: 1;
+  margin-bottom: 10px;
+}
+.hero-title span {
+  display: block;
+  background: linear-gradient(135deg, #f0abfc 0%, #c084fc 40%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-title em {
+  display: block;
+  font-style: italic;
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+}
+
+.hero-sub {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 480px;
+  line-height: 1.7;
+  position: relative; z-index: 1;
+  margin: 24px auto 40px;
+}
+
+.hero-actions {
+  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  position: relative; z-index: 1;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border: none;
+  color: white;
+  padding: 16px 36px;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 0 0 0 rgba(168,85,247,0);
+}
+.btn-primary:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(168,85,247,0.35);
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 16px 28px;
+  border-radius: 100px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+/* ── FLOATING STYLE TAGS (signature element) ── */
+.style-float-row {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+  margin-top: 60px;
+  position: relative; z-index: 1;
+}
+.style-float {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 0.75rem;
+  color: var(--dim);
+  animation: floatUp 0.6s ease both;
+  transition: border-color 0.2s, color 0.2s;
+}
+.style-float:hover { border-color: var(--accent); color: var(--accent); }
+.style-float:nth-child(1) { animation-delay: 0.1s; }
+.style-float:nth-child(2) { animation-delay: 0.2s; }
+.style-float:nth-child(3) { animation-delay: 0.3s; }
+.style-float:nth-child(4) { animation-delay: 0.4s; }
+.style-float:nth-child(5) { animation-delay: 0.5s; }
+.style-float:nth-child(6) { animation-delay: 0.6s; }
+.style-float:nth-child(7) { animation-delay: 0.7s; }
+.style-float:nth-child(8) { animation-delay: 0.8s; }
+@keyframes floatUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HOW IT WORKS ── */
+.section {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 100px 24px;
+}
+.section-label {
+  font-size: 0.68rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text);
+  max-width: 500px;
+}
+.section-title em { font-style: italic; color: var(--accent2); }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 60px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.step {
+  background: var(--surface);
+  padding: 36px 28px;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.step:last-child { border-right: none; }
+.step:hover { background: #15102020; }
+.step-icon {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  display: block;
+}
+.step-num {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+.step-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.step-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ── AESTHETICS GRID ── */
+.aesthetics-section {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 80px 24px;
+}
+.aesthetics-inner { max-width: 1000px; margin: 0 auto; }
+.aesthetics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 48px;
+}
+.aesthetic-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 18px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  text-decoration: none;
+}
+.aesthetic-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.aesthetic-emoji { font-size: 1.6rem; margin-bottom: 12px; display: block; }
+.aesthetic-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.aesthetic-desc { font-size: 0.73rem; color: var(--muted); line-height: 1.5; }
+
+/* ── FEATURES ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 56px;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+}
+.feature-icon { font-size: 1.4rem; margin-bottom: 14px; display: block; }
+.feature-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.feature-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.65; }
+
+/* ── CTA BAND ── */
+.cta-band {
+  text-align: center;
+  padding: 100px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.cta-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(124,58,237,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cta-band h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.cta-band h2 span {
+  font-style: italic;
+  color: var(--accent2);
+}
+.cta-band p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 36px;
+  position: relative;
+}
+.cta-band .btn-primary { position: relative; font-size: 1rem; padding: 18px 44px; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--dim);
+  font-size: 0.75rem;
+}
+.footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .step { border-right: none; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .aesthetics-grid { grid-template-columns: 1fr 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 10px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">✂️ Outfit Curator</a>
+  <ul class="nav-links">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#aesthetics">Styles</a></li>
+    <li><a href="#features">Features</a></li>
+  </ul>
+  <a class="nav-cta" href="outfit-curator.html">Start styling →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="eyebrow-dot"></span>
+    Your personal styling tool
+  </div>
+
+  <h1 class="hero-title">
+    <span>Outfit</span>
+    <em>Creator</em>
+  </h1>
+
+  <p class="hero-sub">
+    Pick your style, your season, your occasion — and get four complete outfit ideas built around what you already own.
+  </p>
+
+  <div class="hero-actions">
+    <a href="outfit-curator.html" class="btn-primary">✦ Create an outfit</a>
+    <a href="#how" class="btn-ghost">See how it works</a>
+  </div>
+
+  <div class="style-float-row">
+    <div class="style-float">Minimalist</div>
+    <div class="style-float">Old Money</div>
+    <div class="style-float">Streetwear</div>
+    <div class="style-float">Cottagecore</div>
+    <div class="style-float">Dark Academia</div>
+    <div class="style-float">Y2K</div>
+    <div class="style-float">Coastal</div>
+    <div class="style-float">Boho</div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="section" id="how">
+  <div class="section-label">How it works</div>
+  <h2 class="section-title">Three steps to a complete <em>look</em></h2>
+
+  <div class="steps">
+    <div class="step">
+      <span class="step-icon">📸</span>
+      <div class="step-num">Step one</div>
+      <div class="step-name">Upload your piece</div>
+      <p class="step-desc">Drag in a photo of any item — a jacket, a pair of shoes, a dress. That's your anchor.</p>
+    </div>
+    <div class="step">
+      <span class="step-icon">🎛️</span>
+      <div class="step-num">Step two</div>
+      <div class="step-name">Set your preferences</div>
+      <p class="step-desc">Choose an occasion, an aesthetic, and the season. Mix and match to get exactly the vibe you're after.</p>
+    </div>
+    <div class="step">
+      <span class="step-icon">✦</span>
+      <div class="step-num">Step three</div>
+      <div class="step-name">Get four outfits</div>
+      <p class="step-desc">Get four distinct looks instantly, each with individual item breakdowns and a personal stylist tip — no waiting, no sign-up.</p>
+    </div>
+  </div>
+</div>
+
+<!-- AESTHETICS -->
+<div class="aesthetics-section" id="aesthetics">
+  <div class="aesthetics-inner">
+    <div class="section-label">Style catalogue</div>
+    <h2 class="section-title">Eight aesthetics, <em>infinite combinations</em></h2>
+
+    <div class="aesthetics-grid">
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">🤍</span>
+        <div class="aesthetic-name">Minimalist</div>
+        <p class="aesthetic-desc">Clean lines, neutral palette, nothing extra.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">🧢</span>
+        <div class="aesthetic-name">Streetwear</div>
+        <p class="aesthetic-desc">Graphic tees, cargo, and chunky soles.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">🥂</span>
+        <div class="aesthetic-name">Old Money</div>
+        <p class="aesthetic-desc">Tailored, understated, quietly expensive.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">💿</span>
+        <div class="aesthetic-name">Y2K</div>
+        <p class="aesthetic-desc">Low-rise, bedazzled, and unapologetically early 2000s.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">🌿</span>
+        <div class="aesthetic-name">Boho</div>
+        <p class="aesthetic-desc">Flowy fabrics, earthy tones, layered textures.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">🌊</span>
+        <div class="aesthetic-name">Coastal</div>
+        <p class="aesthetic-desc">Linen, navy, sun-bleached effortlessness.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">📚</span>
+        <div class="aesthetic-name">Dark Academia</div>
+        <p class="aesthetic-desc">Tweed, plaid, and bookish melancholy.</p>
+      </a>
+      <a class="aesthetic-card" href="outfit-curator.html">
+        <span class="aesthetic-emoji">🌸</span>
+        <div class="aesthetic-name">Cottagecore</div>
+        <p class="aesthetic-desc">Floral prints, prairie dresses, soft romance.</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section" id="features">
+  <div class="section-label">What you get</div>
+  <h2 class="section-title">More than just <em>suggestions</em></h2>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🪡</span>
+      <div class="feature-name">Full item breakdowns</div>
+      <p class="feature-desc">Each outfit comes with four individual pieces — top, bottom, shoes, and an accessory — so you know exactly what to put on.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">✦</span>
+      <div class="feature-name">Personal stylist tips</div>
+      <p class="feature-desc">Every look includes a specific, actionable tip from the stylist — how to wear it, what to swap, where it works best.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎛️</span>
+      <div class="feature-name">Occasion & season aware</div>
+      <p class="feature-desc">Dial in the context: a Monday meeting versus a Saturday party calls for completely different energy, and Outfit Curator knows the difference.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📸</span>
+      <div class="feature-name">Built around your wardrobe</div>
+      <p class="feature-desc">Upload a photo of a real piece you own. Every outfit suggestion is built to pair with it, so the looks actually work for your wardrobe — not a hypothetical one.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CTA BAND -->
+<div class="cta-band">
+  <h2>Ready to find your <span>next look?</span></h2>
+  <p>Choose your style, set your filters, and get four complete looks instantly.</p>
+  <a href="outfit-curator.html" class="btn-primary">✦ Start creating</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">✂️ Outfit Curator</div>
+  <div>Your wardrobe · Your style · Your way</div>
+</footer>
+
+</body>
+</html>

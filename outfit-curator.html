@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outfit Curator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0b14;
+    --surface: #17121f;
+    --border: #2e2040;
+    --accent: #c084fc;
+    --accent2: #f0abfc;
+    --gold: #f5c97a;
+    --text: #f3eeff;
+    --muted: #9e8fb2;
+    --chip-bg: #1f1730;
+    --chip-active: #4c1d95;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  header {
+    background: linear-gradient(160deg, #1a0f2e 0%, #0e0b14 60%);
+    border-bottom: 1px solid var(--border);
+    padding: 36px 40px 30px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  .logo-icon { font-size: 2.4rem; line-height: 1; }
+  .logo-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--accent2);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .logo-text p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; font-weight: 300; }
+
+  .workspace {
+    max-width: 1100px;
+    margin: 36px auto 0;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .panel-title { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 0.7rem; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .panel-body { padding: 18px; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: rgba(192,132,252,0.05); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-label { font-size: 0.85rem; color: var(--muted); }
+  .upload-label strong { color: var(--accent); }
+  .preview-img { width: 100%; border-radius: 8px; margin-top: 14px; display: none; object-fit: cover; max-height: 220px; }
+
+  .section-label { font-size: 0.7rem; font-weight: 500; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); margin: 18px 0 10px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--chip-bg); border: 1px solid var(--border); border-radius: 100px; padding: 6px 14px; font-size: 0.78rem; cursor: pointer; transition: all 0.18s; user-select: none; color: var(--muted); }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+  .chip.active { background: var(--chip-active); border-color: var(--accent); color: var(--accent2); }
+
+  .generate-btn {
+    width: 100%; margin-top: 20px; padding: 14px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border: none; border-radius: 10px; color: white;
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500;
+    cursor: pointer; transition: opacity 0.2s, transform 0.15s; letter-spacing: 0.3px;
+  }
+  .generate-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .results-area { display: flex; flex-direction: column; gap: 20px; }
+
+  .placeholder-state { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 60px 40px; text-align: center; color: var(--muted); }
+  .placeholder-state .ph-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .placeholder-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  .outfit-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; animation: fadeUp 0.35s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .outfit-card:nth-child(2) { animation-delay: 0.07s; }
+  .outfit-card:nth-child(3) { animation-delay: 0.14s; }
+  .outfit-card:nth-child(4) { animation-delay: 0.21s; }
+
+  .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .style-badge { display: flex; align-items: center; gap: 10px; }
+  .style-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .style-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--text); }
+  .vibe-tag { font-size: 0.65rem; background: rgba(192,132,252,0.12); color: var(--accent); border: 1px solid rgba(192,132,252,0.25); border-radius: 100px; padding: 3px 10px; letter-spacing: 1px; text-transform: uppercase; }
+
+  .card-body { padding: 18px; }
+  .outfit-items { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .item-pill { background: var(--chip-bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+  .item-pill .pi { font-size: 1rem; flex-shrink: 0; }
+
+  .stylist-tip { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; font-size: 0.8rem; color: var(--muted); display: flex; gap: 8px; }
+  .tip-label { color: var(--gold); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+
+  @media (max-width: 760px) {
+    .workspace { grid-template-columns: 1fr; }
+    header { padding: 24px 20px 20px; }
+    .workspace { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">✂️</div>
+  <div class="logo-text">
+    <h1>Outfit Curator</h1>
+    <p>Upload a piece · pick your vibe · get styled</p>
+  </div>
+</header>
+
+<div class="workspace">
+  <aside>
+    <div class="panel">
+      <div class="panel-title">Your Item</div>
+      <div class="panel-body">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" accept="image/*">
+          <div class="upload-icon">📸</div>
+          <div class="upload-label"><strong>Click to upload</strong> or drag a photo here</div>
+        </div>
+        <img id="previewImg" class="preview-img" alt="Your clothing item">
+
+        <div class="section-label">Occasion</div>
+        <div class="chips">
+          <div class="chip active" data-group="occasion">Everyday</div>
+          <div class="chip" data-group="occasion">Work</div>
+          <div class="chip" data-group="occasion">Date Night</div>
+          <div class="chip" data-group="occasion">Weekend</div>
+          <div class="chip" data-group="occasion">Party</div>
+          <div class="chip" data-group="occasion">Outdoor</div>
+        </div>
+
+        <div class="section-label">Aesthetic</div>
+        <div class="chips">
+          <div class="chip active" data-group="aesthetic">Minimalist</div>
+          <div class="chip" data-group="aesthetic">Streetwear</div>
+          <div class="chip" data-group="aesthetic">Old Money</div>
+          <div class="chip" data-group="aesthetic">Y2K</div>
+          <div class="chip" data-group="aesthetic">Boho</div>
+          <div class="chip" data-group="aesthetic">Coastal</div>
+          <div class="chip" data-group="aesthetic">Dark Academia</div>
+          <div class="chip" data-group="aesthetic">Cottagecore</div>
+        </div>
+
+        <div class="section-label">Season</div>
+        <div class="chips">
+          <div class="chip" data-group="season">🌸 Spring</div>
+          <div class="chip active" data-group="season">☀️ Summer</div>
+          <div class="chip" data-group="season">🍂 Autumn</div>
+          <div class="chip" data-group="season">❄️ Winter</div>
+        </div>
+
+        <button class="generate-btn" onclick="generateOutfits()">✦ Create Outfits</button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="results-area" id="resultsArea">
+      <div class="placeholder-state">
+        <div class="ph-icon">🪡</div>
+        <p>Upload a clothing item and choose your style preferences,<br>then hit <strong>Create Outfits</strong> to get outfit ideas.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  OUTFIT DATABASE  (fully inbuilt, no API)
+//  Key format:  "aesthetic|occasion|season"
+//  Each entry has 4+ outfits; 4 are picked each time.
+// ─────────────────────────────────────────────
+const OUTFITS = {
+
+  // ══ MINIMALIST ══════════════════════════════
+
+  "Minimalist|Everyday|Summer": [
+    { name: "Clean Slate", vibe: "effortless", items: [
+      { emoji: "👕", description: "Crisp white linen tee, relaxed fit" },
+      { emoji: "👖", description: "Straight-leg light-wash jeans, cropped ankle" },
+      { emoji: "👟", description: "White leather low-top sneakers" },
+      { emoji: "🕶️", description: "Slim black rectangular sunglasses" }
+    ], tip: "Keep accessories to one — a single gold ring or a subtle chain is all you need." },
+    { name: "Tone on Tone", vibe: "understated", items: [
+      { emoji: "👚", description: "Sand-coloured ribbed tank top" },
+      { emoji: "👖", description: "Matching sand linen wide-leg trousers" },
+      { emoji: "🥿", description: "Nude slip-on mules, square toe" },
+      { emoji: "👜", description: "Small structured cream shoulder bag" }
+    ], tip: "Matching your bag to your shoes pulls a tonal look together instantly." },
+    { name: "The Off-Duty Edit", vibe: "quiet cool", items: [
+      { emoji: "👕", description: "Boxy grey marl oversized tee" },
+      { emoji: "🩳", description: "Tailored black shorts, mid-thigh length" },
+      { emoji: "🩴", description: "Minimalist leather slides in tan" },
+      { emoji: "🧴", description: "Canvas tote in natural ecru" }
+    ], tip: "Tuck the front of your tee into the shorts for an effortless half-tuck silhouette." },
+    { name: "Monochrome White", vibe: "sharp clean", items: [
+      { emoji: "👗", description: "Sleeveless white shift dress, knee length" },
+      { emoji: "👟", description: "White chunky-sole platform sneakers" },
+      { emoji: "🕶️", description: "White or clear-frame cat-eye sunglasses" },
+      { emoji: "💍", description: "Single delicate gold chain necklace" }
+    ], tip: "Wear all-white with confidence — a tan or bronzed skin tone makes it pop." },
+    { name: "Studio Simplicity", vibe: "pared back", items: [
+      { emoji: "🧥", description: "Lightweight grey cotton overshirt, unbuttoned" },
+      { emoji: "👕", description: "White fitted crew-neck tee underneath" },
+      { emoji: "👖", description: "Slim black cigarette trousers" },
+      { emoji: "🥿", description: "Black pointed-toe ballet flats" }
+    ], tip: "Let the overshirt hang open as a layer — it adds structure without bulk." }
+  ],
+
+  "Minimalist|Everyday|Winter": [
+    { name: "Grey Matter", vibe: "nordic calm", items: [
+      { emoji: "🧥", description: "Oversized grey wool coat, longline" },
+      { emoji: "👕", description: "Charcoal turtleneck sweater, slim knit" },
+      { emoji: "👖", description: "Straight black trousers, cropped slightly" },
+      { emoji: "👢", description: "Black Chelsea boots, polished leather" }
+    ], tip: "A tonal grey-to-black gradient reads more intentional than a random mix of darks." },
+    { name: "The Wool Uniform", vibe: "cosy edit", items: [
+      { emoji: "🧣", description: "Ivory chunky-knit scarf, draped loosely" },
+      { emoji: "🧥", description: "Camel single-breasted coat, structured" },
+      { emoji: "👖", description: "Dark navy slim trousers" },
+      { emoji: "👢", description: "Tan suede ankle boots" }
+    ], tip: "Camel and navy is the quietest luxury combination in cold weather." },
+    { name: "Midnight Edit", vibe: "all-black", items: [
+      { emoji: "👕", description: "Black ribbed long-sleeve crew neck" },
+      { emoji: "👖", description: "Black tailored wide-leg trousers" },
+      { emoji: "🧥", description: "Black leather biker jacket" },
+      { emoji: "👢", description: "Black sock boots with a low block heel" }
+    ], tip: "Mix matte and shine finishes (leather + knit + wool) to stop all-black looking flat." },
+    { name: "Blanc de Blanc", vibe: "winter white", items: [
+      { emoji: "🧶", description: "Cream cable-knit oversized sweater" },
+      { emoji: "👖", description: "Off-white wide-leg tailored trousers" },
+      { emoji: "🥿", description: "Ivory leather loafers" },
+      { emoji: "🧤", description: "Pale oat cashmere gloves" }
+    ], tip: "Ivory and cream tones together in winter feel deliberately luxurious." }
+  ],
+
+  "Minimalist|Everyday|Spring": [
+    { name: "Fresh Start", vibe: "light ease", items: [
+      { emoji: "👕", description: "White cotton button-down, slightly oversized" },
+      { emoji: "👖", description: "Light grey straight-leg trousers" },
+      { emoji: "👟", description: "White canvas sneakers, low profile" },
+      { emoji: "👜", description: "Mini beige crossbody leather bag" }
+    ], tip: "Leave the bottom two buttons of your shirt undone for a relaxed, modern feel." },
+    { name: "Neutral Ground", vibe: "barely there", items: [
+      { emoji: "🧥", description: "Pale linen trench coat, unbelted" },
+      { emoji: "👚", description: "Stone-coloured fitted tank underneath" },
+      { emoji: "👖", description: "Ecru linen wide-leg trousers" },
+      { emoji: "🥿", description: "Tan leather sandals, minimal straps" }
+    ], tip: "Linen over linen in the same palette is the best spring layering trick." },
+    { name: "The White Shirt Moment", vibe: "classic edge", items: [
+      { emoji: "👕", description: "Crisp poplin white shirt, tucked front only" },
+      { emoji: "🩱", description: "Slim black straight-leg jeans" },
+      { emoji: "🥿", description: "Black pointed-toe loafers" },
+      { emoji: "🕶️", description: "Thin gold-frame oval sunglasses" }
+    ], tip: "The half-tuck is the easiest way to make a shirt look styled, not sloppy." }
+  ],
+
+  "Minimalist|Everyday|Autumn": [
+    { name: "Autumn Archive", vibe: "earthy quiet", items: [
+      { emoji: "🧥", description: "Tobacco-brown leather jacket, boxy fit" },
+      { emoji: "👕", description: "Rust-coloured ribbed long-sleeve top" },
+      { emoji: "👖", description: "Dark olive straight-leg trousers" },
+      { emoji: "👢", description: "Tan suede Chelsea boots" }
+    ], tip: "Earthy tones in the rust-olive-tan family are a foolproof autumn palette." },
+    { name: "Camel Season", vibe: "warm tones", items: [
+      { emoji: "🧥", description: "Longline camel wool coat" },
+      { emoji: "👕", description: "Cream ribbed turtleneck" },
+      { emoji: "👖", description: "Straight dark brown trousers" },
+      { emoji: "👢", description: "Deep cognac leather ankle boots" }
+    ], tip: "Layer warm neutrals — camel, cream, and cognac naturally sit together." },
+    { name: "The Knit Set", vibe: "cosy minimal", items: [
+      { emoji: "🧶", description: "Oversized oatmeal-coloured knit cardigan" },
+      { emoji: "👗", description: "Matching knit slip skirt, mid-calf" },
+      { emoji: "👢", description: "Knee-high black flat leather boots" },
+      { emoji: "👜", description: "Small dark chocolate leather clutch" }
+    ], tip: "A knit set feels polished but cosy — wear the cardigan open over the skirt." }
+  ],
+
+  "Minimalist|Work|Summer": [
+    { name: "Office Linen", vibe: "cool authority", items: [
+      { emoji: "👔", description: "White linen relaxed-fit blazer" },
+      { emoji: "👕", description: "Ivory silk-look camisole underneath" },
+      { emoji: "👖", description: "Wide-leg oatmeal linen trousers" },
+      { emoji: "👠", description: "Nude block-heel mules" }
+    ], tip: "A linen blazer over a cami looks polished and keeps you cool in warm offices." },
+    { name: "Tailored Summer", vibe: "sharp ease", items: [
+      { emoji: "👗", description: "Midi sheath dress in pale grey crepe" },
+      { emoji: "🥿", description: "Black pointed-toe kitten heel flats" },
+      { emoji: "👜", description: "Structured black leather tote" },
+      { emoji: "💍", description: "One bold gold cuff bracelet" }
+    ], tip: "A midi sheath in a neutral crepe is the most versatile work dress you can own." },
+    { name: "Monochrome Meeting", vibe: "power neutral", items: [
+      { emoji: "👔", description: "Crisp white button-down shirt, tucked" },
+      { emoji: "👖", description: "Tailored black straight-leg trousers" },
+      { emoji: "👠", description: "Black leather pointed-toe heels" },
+      { emoji: "👜", description: "Slim black leather shoulder bag" }
+    ], tip: "The white-shirt-black-trouser combination never reads as boring in a quality fabric." }
+  ],
+
+  "Minimalist|Work|Winter": [
+    { name: "Cold Office Power", vibe: "quiet luxury", items: [
+      { emoji: "🧥", description: "Charcoal grey longline blazer, single-breasted" },
+      { emoji: "👕", description: "Black ribbed turtleneck underneath" },
+      { emoji: "👖", description: "Matching charcoal grey trousers" },
+      { emoji: "👢", description: "Black leather Chelsea boots" }
+    ], tip: "A matching blazer-and-trouser set reads as a suit without the rigidity." },
+    { name: "Boardroom Neutrals", vibe: "refined", items: [
+      { emoji: "🧥", description: "Camel wool blazer, relaxed shoulder" },
+      { emoji: "👕", description: "Cream high-neck top, fitted" },
+      { emoji: "👖", description: "Tailored dark navy trousers" },
+      { emoji: "👠", description: "Burgundy leather kitten heels" }
+    ], tip: "Camel + navy is a classic boardroom pairing — the burgundy heel lifts it unexpectedly." }
+  ],
+
+  "Minimalist|Date Night|Summer": [
+    { name: "Effortless Evening", vibe: "subtle allure", items: [
+      { emoji: "👗", description: "White satin bias-cut midi slip dress" },
+      { emoji: "👠", description: "Strappy nude barely-there heeled sandals" },
+      { emoji: "💍", description: "Delicate gold ear cuffs" },
+      { emoji: "👜", description: "Tiny gold chain evening bag" }
+    ], tip: "A slip dress needs nothing extra — let the fabric and fit do the work." },
+    { name: "The Black Dress Edit", vibe: "timeless", items: [
+      { emoji: "👗", description: "Fitted black sleeveless midi dress" },
+      { emoji: "👠", description: "Pointed-toe black stiletto heels" },
+      { emoji: "💍", description: "Single statement gold necklace, chunky" },
+      { emoji: "👜", description: "Black satin mini clutch" }
+    ], tip: "One bold piece of jewellery is all the black dress needs — resist adding more." }
+  ],
+
+  // ══ STREETWEAR ══════════════════════════════
+
+  "Streetwear|Everyday|Summer": [
+    { name: "Heat Wave Uniform", vibe: "laid back", items: [
+      { emoji: "👕", description: "Oversized graphic tee, band or art print" },
+      { emoji: "🩳", description: "Baggy mesh shorts, knee length" },
+      { emoji: "👟", description: "New Balance 550s in white and grey" },
+      { emoji: "🧢", description: "Washed black baseball cap, unstructured" }
+    ], tip: "Size up your graphic tee two sizes — the volume is the point." },
+    { name: "Cargo Days", vibe: "utility cool", items: [
+      { emoji: "👕", description: "Cropped white ribbed tank top" },
+      { emoji: "👖", description: "Khaki cargo shorts with side pockets" },
+      { emoji: "👟", description: "Jordan 1 Low in white and black" },
+      { emoji: "🎒", description: "Mini backpack in black nylon" }
+    ], tip: "Let the cargo pockets actually hold your stuff — functional fashion is the move." },
+    { name: "Muted Flex", vibe: "tonal street", items: [
+      { emoji: "👕", description: "Greige oversized tee, dropped shoulders" },
+      { emoji: "👖", description: "Stone-coloured wide-leg joggers" },
+      { emoji: "👟", description: "Adidas Samba in off-white and gum" },
+      { emoji: "🧢", description: "Neutral bucket hat in cream canvas" }
+    ], tip: "All neutrals in streetwear works when you vary the silhouette — oversized top, tapered leg or wide leg." },
+    { name: "Vintage Hoodie Set", vibe: "retro casual", items: [
+      { emoji: "👕", description: "Vintage-wash graphic hoodie, cropped fit" },
+      { emoji: "🩳", description: "Matching sweat shorts in same tone" },
+      { emoji: "👟", description: "Chunky white dad sneakers" },
+      { emoji: "🧦", description: "Ankle socks with a subtle logo" }
+    ], tip: "Matching hoodie and shorts sets look intentional — pick a washed-out colour for the vintage feel." }
+  ],
+
+  "Streetwear|Everyday|Winter": [
+    { name: "Puffer Season", vibe: "street warm", items: [
+      { emoji: "🧥", description: "Oversized black puffer jacket, longline" },
+      { emoji: "👕", description: "Black crewneck sweatshirt underneath" },
+      { emoji: "👖", description: "Relaxed-fit dark grey cargo trousers" },
+      { emoji: "👢", description: "Chunky black lug-sole boots" }
+    ], tip: "A longline puffer over baggy cargo trousers is winter's best silhouette for streetwear." },
+    { name: "Layered Up", vibe: "cosy flex", items: [
+      { emoji: "🧥", description: "Heavyweight zip-up hoodie in forest green" },
+      { emoji: "👕", description: "White longline tee peeking below" },
+      { emoji: "👖", description: "Black relaxed-fit cords" },
+      { emoji: "👟", description: "Air Force 1s in white" }
+    ], tip: "Let your underlayer hang below your hoodie — layering is both functional and stylish." },
+    { name: "The Track Set", vibe: "retro warm", items: [
+      { emoji: "🏃", description: "Retro track jacket in navy and white stripe" },
+      { emoji: "👖", description: "Matching track trousers, slim cut" },
+      { emoji: "👟", description: "Nike Air Max 90 in white and navy" },
+      { emoji: "🧢", description: "Vintage-style beanie, ribbed knit" }
+    ], tip: "Matching track sets need a clean sneaker and zero other pattern to look sharp." }
+  ],
+
+  "Streetwear|Everyday|Spring": [
+    { name: "Spring Drop", vibe: "clean hype", items: [
+      { emoji: "🧥", description: "Light coach jacket in mint green nylon" },
+      { emoji: "👕", description: "White short-sleeve tee underneath" },
+      { emoji: "👖", description: "Straight-leg black jeans" },
+      { emoji: "👟", description: "Adidas Gazelle in white and green" }
+    ], tip: "A nylon coach jacket is the perfect spring transition piece — it packs down easily too." },
+    { name: "Fleece Weather", vibe: "soft edge", items: [
+      { emoji: "👕", description: "Pastel lavender zip-up fleece" },
+      { emoji: "👕", description: "White fitted tee underneath" },
+      { emoji: "🩳", description: "Light wash denim shorts" },
+      { emoji: "👟", description: "New Balance 574 in grey and purple" }
+    ], tip: "Pastel colourways in streetwear feel fresh — pair with clean white for balance." }
+  ],
+
+  "Streetwear|Everyday|Autumn": [
+    { name: "Fall Drip", vibe: "earth tones", items: [
+      { emoji: "🧥", description: "Oversized brown corduroy overshirt jacket" },
+      { emoji: "👕", description: "Rust-orange long-sleeve graphic tee" },
+      { emoji: "👖", description: "Olive cargo pants, relaxed fit" },
+      { emoji: "👟", description: "New Balance 574 in brown and cream" }
+    ], tip: "Earth-tone streetwear works best with vintage-style sneakers in matching warm tones." },
+    { name: "Hoodie Weather", vibe: "seasonal shift", items: [
+      { emoji: "👕", description: "Heavyweight black hoodie, boxy cut" },
+      { emoji: "👖", description: "Dark brown straight-leg cords" },
+      { emoji: "👟", description: "Jordan 4 in dark mocha colourway" },
+      { emoji: "🧢", description: "Brown wool beanie" }
+    ], tip: "Black and brown is an underrated autumn combo — ground it with the right sneaker." }
+  ],
+
+  "Streetwear|Weekend|Summer": [
+    { name: "Block Party Ready", vibe: "relaxed hype", items: [
+      { emoji: "👕", description: "Washed tie-dye oversized tee" },
+      { emoji: "🩳", description: "Black athletic shorts, 7-inch inseam" },
+      { emoji: "👟", description: "Classic white Nike Air Force 1s" },
+      { emoji: "🎒", description: "Drawstring bag in matching colour" }
+    ], tip: "Tie-dye needs a clean sneaker and simple bag to keep it from looking chaotic." },
+    { name: "Festival Kit", vibe: "loud easy", items: [
+      { emoji: "👕", description: "Boxy vintage band tee, cropped DIY" },
+      { emoji: "🩳", description: "Denim cut-off shorts, frayed hem" },
+      { emoji: "👟", description: "Chunky platform sneakers in white" },
+      { emoji: "👜", description: "Mini fanny pack worn cross-body" }
+    ], tip: "Wear the fanny pack across the chest, not on the waist — it's both practical and cooler." }
+  ],
+
+  "Streetwear|Party|Summer": [
+    { name: "Night Out Drip", vibe: "after dark", items: [
+      { emoji: "👕", description: "Black silk short-sleeve button-up, open two buttons" },
+      { emoji: "👖", description: "Black straight-leg trousers, slim through ankle" },
+      { emoji: "👟", description: "Triple black Adidas Stan Smiths" },
+      { emoji: "💍", description: "Chunky silver chain necklace" }
+    ], tip: "A silk shirt elevates streetwear for a night out — keep everything else clean and black." }
+  ],
+
+  // ══ OLD MONEY ═══════════════════════════════
+
+  "Old Money|Everyday|Summer": [
+    { name: "The Country Club", vibe: "quiet wealth", items: [
+      { emoji: "👕", description: "White piqué polo shirt, fitted" },
+      { emoji: "🩳", description: "Tailored chino shorts in pale yellow" },
+      { emoji: "👟", description: "White leather loafers or boat shoes" },
+      { emoji: "⌚", description: "Classic watch with a leather strap" }
+    ], tip: "A polo needs to fit well — avoid anything too baggy or the prep look falls apart." },
+    { name: "Linen & Leisure", vibe: "mediterranean", items: [
+      { emoji: "👕", description: "Pale blue linen shirt, half-tucked" },
+      { emoji: "👖", description: "Ecru linen trousers, relaxed fit" },
+      { emoji: "🥿", description: "Brown leather espadrilles" },
+      { emoji: "🕶️", description: "Tortoiseshell round-frame sunglasses" }
+    ], tip: "Linen in pastel tones is the uniform of old money summers — embrace the slight wrinkles." },
+    { name: "Nautical Ease", vibe: "regatta ready", items: [
+      { emoji: "👕", description: "Navy and white striped Breton top" },
+      { emoji: "🩳", description: "Tailored white linen shorts" },
+      { emoji: "👟", description: "Canvas navy boat shoes, Sperry-style" },
+      { emoji: "🕶️", description: "Aviator sunglasses in gold frame" }
+    ], tip: "Navy stripes with white shorts is sailor-chic — add a gold-tone watch to complete it." },
+    { name: "The Understated Heir", vibe: "inherited cool", items: [
+      { emoji: "👕", description: "Sage green Oxford shirt, slightly oversized" },
+      { emoji: "👖", description: "Pleated chino trousers in stone" },
+      { emoji: "🥿", description: "Tan suede penny loafers" },
+      { emoji: "👜", description: "Worn-in leather tote bag" }
+    ], tip: "Nothing looks more old money than well-worn quality — choose leather and linen over synthetic fabrics." }
+  ],
+
+  "Old Money|Everyday|Winter": [
+    { name: "Heritage Warmth", vibe: "estate walk", items: [
+      { emoji: "🧥", description: "Herringbone wool overcoat in grey-brown" },
+      { emoji: "🧶", description: "Burgundy cashmere roll-neck sweater" },
+      { emoji: "👖", description: "Dark olive corduroy trousers" },
+      { emoji: "👢", description: "Dark brown leather lace-up brogues" }
+    ], tip: "Corduroy and tweed are the old money answer to denim — warmer and far more distinguished." },
+    { name: "The Weekend Estate", vibe: "understated", items: [
+      { emoji: "🧥", description: "Dark green waxed cotton field jacket" },
+      { emoji: "🧶", description: "Oatmeal chunky-knit crew sweater" },
+      { emoji: "👖", description: "Slim-fit dark navy cords" },
+      { emoji: "👢", description: "Tan leather hunter boots or brogues" }
+    ], tip: "A waxed jacket with cords is old money country — it looks better with age, like the best things do." }
+  ],
+
+  "Old Money|Work|Summer": [
+    { name: "The Associates", vibe: "Ivy League", items: [
+      { emoji: "👔", description: "Pale blue poplin dress shirt, crisp" },
+      { emoji: "👖", description: "Well-pressed navy suit trousers" },
+      { emoji: "👠", description: "Brown leather Oxford shoes, polished" },
+      { emoji: "🎗️", description: "Striped silk pocket square, navy and white" }
+    ], tip: "Invest in exactly two things: the shirt collar staying put and perfectly polished shoes." },
+    { name: "Summer Associates", vibe: "tasteful power", items: [
+      { emoji: "🧥", description: "Light grey linen blazer, single button" },
+      { emoji: "👗", description: "Cream silk blouse underneath" },
+      { emoji: "👖", description: "Navy straight-leg linen trousers" },
+      { emoji: "👠", description: "Nude pointed-toe heels" }
+    ], tip: "Linen for summer work dressing — look for a structured cut that holds its shape through the day." }
+  ],
+
+  "Old Money|Date Night|Summer": [
+    { name: "The Garden Party", vibe: "romantic prep", items: [
+      { emoji: "👗", description: "White midi wrap dress with subtle pattern" },
+      { emoji: "👠", description: "Tan leather block-heel sandals" },
+      { emoji: "💍", description: "Pearl earrings, classic drop style" },
+      { emoji: "👜", description: "Small rattan or wicker evening bag" }
+    ], tip: "A wrap dress works every body type — tie the bow slightly to the side for a more modern look." },
+    { name: "Evening Prep", vibe: "quiet luxury", items: [
+      { emoji: "👔", description: "Pale pink Oxford button-down, well-fitted" },
+      { emoji: "👖", description: "White tailored chino trousers" },
+      { emoji: "🥿", description: "Tan leather loafers, no socks" },
+      { emoji: "⌚", description: "Dress watch, leather strap, white face" }
+    ], tip: "Pink and white for a summer dinner date reads relaxed but considered — skip the tie." }
+  ],
+
+  "Old Money|Weekend|Summer": [
+    { name: "Saturday Morning", vibe: "easy refinement", items: [
+      { emoji: "👕", description: "Faded white Oxford shirt, unbuttoned" },
+      { emoji: "🩳", description: "Madras check shorts in blue and cream" },
+      { emoji: "🥿", description: "Leather huarache sandals" },
+      { emoji: "🕶️", description: "Wayfarers in classic tortoiseshell" }
+    ], tip: "Madras print is the quintessential old money weekend print — keep everything else plain." }
+  ],
+
+  // ══ Y2K ═════════════════════════════════════
+
+  "Y2K|Everyday|Summer": [
+    { name: "2003 Redux", vibe: "Y2K revival", items: [
+      { emoji: "👚", description: "Baby tee with rhinestone logo print" },
+      { emoji: "👖", description: "Low-rise flare jeans in light wash" },
+      { emoji: "👟", description: "Platform flip flops or chunky sandals" },
+      { emoji: "💄", description: "Lip gloss and tiny butterfly hair clips" }
+    ], tip: "Authentic Y2K pieces are everywhere at vintage shops — look for rhinestone details and logo mania." },
+    { name: "Mall Rat Energy", vibe: "early 2000s", items: [
+      { emoji: "👚", description: "Pastel cropped mesh top or ruched tube" },
+      { emoji: "🩳", description: "Low-rise mini skirt in denim or plaid" },
+      { emoji: "🥿", description: "Chunky platform mules, clear or patent" },
+      { emoji: "👜", description: "Mini baguette bag with chain strap" }
+    ], tip: "Y2K is about proportion — keep your top tiny and let the accessories be loud." },
+    { name: "Juicy Velour", vibe: "celeb casual", items: [
+      { emoji: "👚", description: "Velour crop hoodie in pink or lavender" },
+      { emoji: "👖", description: "Matching velour flared trackpants" },
+      { emoji: "🥿", description: "White kitten mules or fluffy sliders" },
+      { emoji: "💍", description: "Oversized nameplate necklace in gold" }
+    ], tip: "A velour tracksuit is peak Y2K — the matching set makes it look intentional, not lazy." },
+    { name: "Denim on Denim", vibe: "double denim", items: [
+      { emoji: "🧥", description: "Cropped denim jacket with badges or patches" },
+      { emoji: "👗", description: "Low-rise denim mini skirt" },
+      { emoji: "👟", description: "Platform white sneakers" },
+      { emoji: "🕶️", description: "Tiny tinted wraparound sunglasses" }
+    ], tip: "Canadian tuxedo works in Y2K when the washes contrast — light top, medium bottom." }
+  ],
+
+  "Y2K|Everyday|Winter": [
+    { name: "Paris Hilton Winter", vibe: "glam cold", items: [
+      { emoji: "🧥", description: "Faux fur short jacket in blush or cream" },
+      { emoji: "👖", description: "Low-rise wide-leg jeans in white" },
+      { emoji: "👢", description: "Knee-high stiletto boots in white or tan" },
+      { emoji: "👜", description: "Tiny logo bag in bold colour" }
+    ], tip: "A faux fur jacket in a pale tone is the quintessential Y2K winter flex." },
+    { name: "Cold Bedazzled", vibe: "rhinestone winter", items: [
+      { emoji: "👕", description: "Rhinestone-embellished cropped long-sleeve" },
+      { emoji: "👖", description: "Low-rise flare jeans, dark wash" },
+      { emoji: "👢", description: "Platform ankle boots in black patent" },
+      { emoji: "💍", description: "Layered chain necklaces in silver" }
+    ], tip: "Rhinestones catch light in winter — they're the Y2K alternative to sparkle dresses." }
+  ],
+
+  "Y2K|Party|Summer": [
+    { name: "Club 2003", vibe: "party era", items: [
+      { emoji: "👗", description: "Micro mini metallic skirt, silver or gold" },
+      { emoji: "👚", description: "Tied-up halter crop top" },
+      { emoji: "👠", description: "Platform stiletto sandals in silver" },
+      { emoji: "💄", description: "Glitter shadow and glossy lip" }
+    ], tip: "Metallic skirts with a simple halter top are the easiest Y2K party formula." },
+    { name: "Butterfly Effect", vibe: "butterfly era", items: [
+      { emoji: "👗", description: "Slip dress with butterfly print or embellishment" },
+      { emoji: "🥿", description: "Barely-there heeled sandals" },
+      { emoji: "💍", description: "Butterfly hair pins or clips" },
+      { emoji: "👜", description: "Iridescent mini baguette bag" }
+    ], tip: "Butterflies were THE motif of Y2K — an iridescent or holographic accessory seals the look." }
+  ],
+
+  // ══ BOHO ════════════════════════════════════
+
+  "Boho|Everyday|Summer": [
+    { name: "Festival Flower", vibe: "free spirit", items: [
+      { emoji: "👗", description: "Maxi floral wrap dress in earthy tones" },
+      { emoji: "🥿", description: "Brown leather gladiator sandals" },
+      { emoji: "💍", description: "Layered beaded necklaces and rings" },
+      { emoji: "👜", description: "Fringed leather crossbody bag" }
+    ], tip: "Keep patterns to one piece — a busy maxi dress works with plain leather accessories." },
+    { name: "Desert Drift", vibe: "earthy free", items: [
+      { emoji: "👕", description: "Embroidered white peasant blouse, off-shoulder" },
+      { emoji: "👖", description: "Wide-leg linen trousers in terracotta" },
+      { emoji: "🥿", description: "Woven leather sandals with ankle strap" },
+      { emoji: "🌿", description: "Straw or raffia tote bag" }
+    ], tip: "An embroidered blouse is the boho anchor — let everything else breathe around it." },
+    { name: "Prairie Sun", vibe: "flowy ease", items: [
+      { emoji: "👗", description: "Tiered midi skirt in patchwork or floral" },
+      { emoji: "👚", description: "Fitted white ribbed tank top" },
+      { emoji: "🥿", description: "Tan leather slide sandals" },
+      { emoji: "🧣", description: "Thin scarf worn as a headband" }
+    ], tip: "A tiered skirt needs a fitted top — the contrast in silhouette is what makes boho work." },
+    { name: "Crochet Days", vibe: "handmade sun", items: [
+      { emoji: "👕", description: "Crochet bikini top or crop, handmade style" },
+      { emoji: "👖", description: "High-waisted linen shorts in cream" },
+      { emoji: "🥿", description: "Leather thong sandals, flat" },
+      { emoji: "🌙", description: "Layered moon and star necklaces" }
+    ], tip: "Crochet pieces are the boho statement — keep the rest very simple and linen-toned." }
+  ],
+
+  "Boho|Everyday|Autumn": [
+    { name: "Autumn Wanderer", vibe: "earthy layers", items: [
+      { emoji: "🧥", description: "Oversized vintage-look kimono cardigan" },
+      { emoji: "👕", description: "Rust-coloured ribbed fitted top" },
+      { emoji: "👖", description: "Wide-leg brown corduroy trousers" },
+      { emoji: "👢", description: "Brown suede ankle boots with fringe" }
+    ], tip: "A kimono cardigan is the easiest autumn boho layer — leave it open and flowing." },
+    { name: "Harvest Fields", vibe: "rustic warmth", items: [
+      { emoji: "👗", description: "Patchwork or ditsy floral maxi skirt" },
+      { emoji: "🧶", description: "Chunky oatmeal knit sweater, boxy" },
+      { emoji: "👢", description: "Cognac leather knee-high boots" },
+      { emoji: "🌿", description: "Stacked amber and wooden bead bracelets" }
+    ], tip: "A chunky knit with a maxi skirt feels unexpectedly polished — the height contrast is key." }
+  ],
+
+  "Boho|Weekend|Summer": [
+    { name: "Saturday Wander", vibe: "market day", items: [
+      { emoji: "👗", description: "Smocked bandeau midi dress in ditsy print" },
+      { emoji: "🥿", description: "Flat leather mule sandals" },
+      { emoji: "🌿", description: "Large raffia or straw market bag" },
+      { emoji: "🕶️", description: "Round wire-frame sunglasses" }
+    ], tip: "A smocked dress with a market bag looks like you're always going somewhere wonderful." }
+  ],
+
+  // ══ COASTAL ═════════════════════════════════
+
+  "Coastal|Everyday|Summer": [
+    { name: "Harbour Blues", vibe: "sea salt ease", items: [
+      { emoji: "👕", description: "Faded navy Breton stripe linen tee" },
+      { emoji: "🩳", description: "Linen shorts in white, mid-length" },
+      { emoji: "🥿", description: "Canvas espadrilles in natural jute" },
+      { emoji: "🕶️", description: "Teardrop pilot sunglasses in gold" }
+    ], tip: "Navy stripe with white shorts is coast-ready year-round — faded linen reads more authentic than crisp cotton." },
+    { name: "The Marina Look", vibe: "saltwater prep", items: [
+      { emoji: "👕", description: "White breezy linen button-down, sleeves rolled" },
+      { emoji: "🩳", description: "Pale blue tailored linen shorts" },
+      { emoji: "🥿", description: "White leather boat shoes, no laces" },
+      { emoji: "🕶️", description: "Wayfarer sunglasses in tortoiseshell" }
+    ], tip: "Roll your sleeves to the elbow and leave the bottom two buttons of a linen shirt undone." },
+    { name: "Beach Town Sunday", vibe: "relaxed coastal", items: [
+      { emoji: "👗", description: "Breezy white midi sundress, spaghetti straps" },
+      { emoji: "🥿", description: "Woven raffia flat sandals" },
+      { emoji: "👜", description: "Large woven or straw tote bag" },
+      { emoji: "🕶️", description: "Oversized white-frame cat-eye sunglasses" }
+    ], tip: "White with woven accessories is coastal at its simplest and best — let the tan do the rest." },
+    { name: "Shore Side", vibe: "breezy clean", items: [
+      { emoji: "👚", description: "Tucked-in striped tank in navy and white" },
+      { emoji: "🩱", description: "High-waisted blue and white gingham shorts" },
+      { emoji: "🥿", description: "Simple tan leather flat sandals" },
+      { emoji: "💍", description: "Shell or puka shell necklace, layered" }
+    ], tip: "Gingham and stripes work together in coastal dressing when they share the same colour family." }
+  ],
+
+  "Coastal|Everyday|Spring": [
+    { name: "Easter Coast", vibe: "spring shore", items: [
+      { emoji: "🧥", description: "Light sky-blue linen blazer" },
+      { emoji: "👕", description: "White fitted tee underneath" },
+      { emoji: "👖", description: "White straight-leg jeans" },
+      { emoji: "👟", description: "Pale blue canvas sneakers" }
+    ], tip: "All pale blue and white in spring feels like the shore before peak season — unhurried and calm." }
+  ],
+
+  "Coastal|Date Night|Summer": [
+    { name: "Sunset Dinner", vibe: "golden hour", items: [
+      { emoji: "👗", description: "Linen halter midi dress in warm sand or terracotta" },
+      { emoji: "👠", description: "Tan strappy heeled sandals" },
+      { emoji: "💍", description: "Gold hoop earrings, chunky and simple" },
+      { emoji: "👜", description: "Small woven clutch in neutral tone" }
+    ], tip: "Terra cotta and gold for a coastal evening dinner — warm tones catch the light beautifully." }
+  ],
+
+  // ══ DARK ACADEMIA ════════════════════════════
+
+  "Dark Academia|Everyday|Autumn": [
+    { name: "The Library Dweller", vibe: "scholarly", items: [
+      { emoji: "🧥", description: "Brown or dark green tweed blazer" },
+      { emoji: "👕", description: "Dark Oxford shirt, deep burgundy or forest" },
+      { emoji: "👖", description: "Dark brown or black wide-leg trousers" },
+      { emoji: "👢", description: "Oxford brogues or lace-up boots in dark brown" }
+    ], tip: "Tweed and oxfords are the dark academia cornerstone — add a vintage brooch for authenticity." },
+    { name: "Autumn Term", vibe: "gothic prep", items: [
+      { emoji: "🧥", description: "Oversized dark grey or black trench coat" },
+      { emoji: "👕", description: "White button-down underneath, slightly loose" },
+      { emoji: "👗", description: "Dark plaid midi skirt, green or burgundy" },
+      { emoji: "👢", description: "Black Mary Jane shoes or lace-up boots" }
+    ], tip: "A plaid skirt under a dark trench coat is the most academic look you can pull off." },
+    { name: "Cardigan Weather", vibe: "poetic layers", items: [
+      { emoji: "🧶", description: "Oversized dark brown argyle cardigan" },
+      { emoji: "👕", description: "White collared shirt visible at neck and wrists" },
+      { emoji: "👖", description: "Black cigarette trousers" },
+      { emoji: "🥿", description: "Dark brown loafers" }
+    ], tip: "The cardigan-over-collar combo is the most accessible dark academia look — try argyle or cable knit." },
+    { name: "The Poet's Walk", vibe: "romantic dark", items: [
+      { emoji: "👗", description: "Black velvet midi dress, high neck" },
+      { emoji: "🧥", description: "Charcoal wool longline cardigan over top" },
+      { emoji: "👢", description: "Black lace-up chunky ankle boots" },
+      { emoji: "📚", description: "Worn leather satchel bag" }
+    ], tip: "Velvet in dark academia should be matte and understated — no shine, no sequins." }
+  ],
+
+  "Dark Academia|Everyday|Winter": [
+    { name: "Midnight Studies", vibe: "after curfew", items: [
+      { emoji: "🧥", description: "Black wool longline coat, structured" },
+      { emoji: "🧶", description: "Dark burgundy turtleneck sweater" },
+      { emoji: "👖", description: "Black wide-leg tailored trousers" },
+      { emoji: "👢", description: "Black heeled chelsea boots" }
+    ], tip: "Black with burgundy is the dark academia winter colour story — minimal and moody." },
+    { name: "Winter Term", vibe: "frost and ink", items: [
+      { emoji: "🧶", description: "Dark forest green chunky turtleneck" },
+      { emoji: "👖", description: "Brown corduroy wide-leg trousers" },
+      { emoji: "🧥", description: "Tweed herringbone blazer layered over" },
+      { emoji: "👢", description: "Brown leather lace-up boots, chunky sole" }
+    ], tip: "Forest green and warm brown are the dark academia palette — earthy but shadowed." }
+  ],
+
+  "Dark Academia|Work|Autumn": [
+    { name: "The Professor", vibe: "intellectual", items: [
+      { emoji: "🧥", description: "Dark charcoal herringbone blazer" },
+      { emoji: "👕", description: "Burgundy roll-neck underneath" },
+      { emoji: "👖", description: "Dark olive or black tailored trousers" },
+      { emoji: "🥿", description: "Classic leather Oxford brogues" }
+    ], tip: "A herringbone blazer with a roll-neck is the intellectual's power suit." }
+  ],
+
+  // ══ COTTAGECORE ─────────────────────────────
+
+  "Cottagecore|Everyday|Spring": [
+    { name: "Wildflower Walk", vibe: "pastoral soft", items: [
+      { emoji: "👗", description: "White cotton prairie dress with eyelet trim" },
+      { emoji: "🥿", description: "Brown leather Mary Jane flats" },
+      { emoji: "🌸", description: "Floral hair wreath or ribbon headband" },
+      { emoji: "👜", description: "Wicker or woven basket bag" }
+    ], tip: "A white cotton prairie dress is the cottagecore uniform — add flowers anywhere you can." },
+    { name: "Meadow Morning", vibe: "bloom soft", items: [
+      { emoji: "👗", description: "Ditsy floral midi dress, puffed sleeves" },
+      { emoji: "🧥", description: "Cream linen overshirt or cardigan layered" },
+      { emoji: "🥿", description: "Simple tan leather ballet flats" },
+      { emoji: "🌿", description: "Small crossbody in butter yellow" }
+    ], tip: "Puffed sleeves are the cottagecore signature — if your dress has them, keep everything else minimal." },
+    { name: "Garden Party", vibe: "soft romance", items: [
+      { emoji: "👗", description: "Sage green smocked midi dress" },
+      { emoji: "🥿", description: "White leather strap sandals" },
+      { emoji: "💍", description: "Pressed flower resin jewellery" },
+      { emoji: "🌿", description: "A small woven clutch in cream" }
+    ], tip: "Sage green is the cottagecore colour of the season — softer and more wearable than emerald." }
+  ],
+
+  "Cottagecore|Everyday|Summer": [
+    { name: "Sunlit Cottage", vibe: "sun-drenched", items: [
+      { emoji: "👗", description: "Yellow gingham puffed-sleeve sundress" },
+      { emoji: "🥿", description: "Natural jute espadrilles with ankle ties" },
+      { emoji: "🌻", description: "Sunflower or daisy hair pin" },
+      { emoji: "👜", description: "Hand-embroidered canvas bag" }
+    ], tip: "Gingham in summer feels inherently cottagecore — yellow or red are the most charming choices." },
+    { name: "Raspberry Beret", vibe: "berry picking", items: [
+      { emoji: "👚", description: "Raspberry or dusty rose linen peasant blouse" },
+      { emoji: "👗", description: "White eyelet midi skirt, tiered" },
+      { emoji: "🥿", description: "Tan leather braided sandals" },
+      { emoji: "🌸", description: "Small ribbon bow in matching pink" }
+    ], tip: "Dusty rose and white eyelet is a sweet summer cottagecore formula — add a ribbon anywhere." },
+    { name: "Lace and Lavender", vibe: "gentle blooms", items: [
+      { emoji: "👗", description: "Lavender lace-trim slip midi dress" },
+      { emoji: "🧥", description: "Cream cropped knit cardigan layered over" },
+      { emoji: "🥿", description: "White leather Mary Jane flats" },
+      { emoji: "💍", description: "Delicate pearl and lavender bead necklace" }
+    ], tip: "Lavender and cream together feel dreamy without trying — layer a cardigan loosely over a slip dress." }
+  ],
+
+  "Cottagecore|Everyday|Autumn": [
+    { name: "Apple Orchard", vibe: "harvest soft", items: [
+      { emoji: "🧶", description: "Rust-red chunky knit oversized cardigan" },
+      { emoji: "👗", description: "Brown corduroy pinafore dress underneath" },
+      { emoji: "🥿", description: "Tan leather ankle boots" },
+      { emoji: "🌿", description: "Wooden bead and acorn necklace" }
+    ], tip: "A pinafore over a chunky cardigan is the cosiest autumn cottagecore combo." },
+    { name: "Mushroom Season", vibe: "forest floor", items: [
+      { emoji: "🧶", description: "Mushroom-brown cable-knit turtleneck" },
+      { emoji: "👗", description: "Warm beige linen tiered maxi skirt" },
+      { emoji: "👢", description: "Dark cognac lace-up ankle boots" },
+      { emoji: "🍄", description: "Wicker basket bag or forager's satchel" }
+    ], tip: "Earthy neutrals in cottagecore are all about warmth — oatmeal, mushroom, and cognac work together naturally." }
+  ],
+
+  "Cottagecore|Everyday|Winter": [
+    { name: "Fireside Reads", vibe: "cosy warmth", items: [
+      { emoji: "🧶", description: "Cream fair isle patterned wool sweater" },
+      { emoji: "👖", description: "Dark brown corduroy wide-leg trousers" },
+      { emoji: "👢", description: "Dark leather lace-up Chelsea boots" },
+      { emoji: "🌿", description: "Pressed botanicals pinned as brooch" }
+    ], tip: "Fair isle and corduroy in a warm colour story is cottagecore winter at its most charming." }
+  ],
+
+  // ── FALLBACK (used when no specific match) ───
+  "__default__": [
+    { name: "Classic Edit", vibe: "timeless", items: [
+      { emoji: "👕", description: "White fitted crew-neck cotton tee" },
+      { emoji: "👖", description: "Dark wash straight-leg jeans" },
+      { emoji: "👟", description: "White leather low-top sneakers" },
+      { emoji: "🕶️", description: "Black wayfarer sunglasses" }
+    ], tip: "White tee and dark jeans is the most versatile base you can own — build from here." },
+    { name: "Casual Layers", vibe: "easy cool", items: [
+      { emoji: "🧥", description: "Denim jacket in medium wash" },
+      { emoji: "👕", description: "Striped breton tee underneath" },
+      { emoji: "👖", description: "Black slim-fit trousers" },
+      { emoji: "👟", description: "Clean white canvas sneakers" }
+    ], tip: "A denim jacket over a stripe tee is classic layering that never goes out of style." },
+    { name: "Smart Weekend", vibe: "elevated casual", items: [
+      { emoji: "👔", description: "Light blue Oxford shirt, half tucked" },
+      { emoji: "👖", description: "Slim-fit chino trousers in khaki" },
+      { emoji: "🥿", description: "Tan leather loafers" },
+      { emoji: "⌚", description: "Simple watch with a leather strap" }
+    ], tip: "The half-tuck turns any shirt from sloppy to intentional in two seconds." },
+    { name: "All Black Everything", vibe: "fail-safe", items: [
+      { emoji: "👕", description: "Black fitted long-sleeve top" },
+      { emoji: "👖", description: "Black straight-leg trousers" },
+      { emoji: "🥿", description: "Black leather ankle boots" },
+      { emoji: "👜", description: "Black structured shoulder bag" }
+    ], tip: "All-black works best when you vary textures — matte knit, smooth leather, structured canvas." }
+  ]
+};
+
+// ── Utility: shuffle array
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Look up outfits by key, with progressive fallback
+function lookupOutfits(aesthetic, occasion, season) {
+  const exact = `${aesthetic}|${occasion}|${season}`;
+  if (OUTFITS[exact]) return shuffle(OUTFITS[exact]).slice(0, 4);
+
+  // Try aesthetic + occasion (any season)
+  const allKeys = Object.keys(OUTFITS);
+  const aoMatch = allKeys.filter(k => k.startsWith(`${aesthetic}|${occasion}|`));
+  if (aoMatch.length) {
+    const pool = aoMatch.flatMap(k => OUTFITS[k]);
+    return shuffle(pool).slice(0, 4);
+  }
+
+  // Try aesthetic only (any occasion, any season)
+  const aMatch = allKeys.filter(k => k.startsWith(`${aesthetic}|`));
+  if (aMatch.length) {
+    const pool = aMatch.flatMap(k => OUTFITS[k]);
+    return shuffle(pool).slice(0, 4);
+  }
+
+  // Use default
+  return shuffle(OUTFITS["__default__"]).slice(0, 4);
+}
+
+// ── Chip selection
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const group = chip.dataset.group;
+    document.querySelectorAll(`.chip[data-group="${group}"]`).forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+
+// ── Image upload
+const fileInput = document.getElementById('fileInput');
+const previewImg = document.getElementById('previewImg');
+const uploadZone = document.getElementById('uploadZone');
+
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => { previewImg.src = evt.target.result; previewImg.style.display = 'block'; };
+  reader.readAsDataURL(file);
+});
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = evt => { previewImg.src = evt.target.result; previewImg.style.display = 'block'; };
+  reader.readAsDataURL(file);
+});
+
+function getSelected(group) {
+  const el = document.querySelector(`.chip.active[data-group="${group}"]`);
+  return el ? el.textContent.replace(/[🌸☀️🍂❄️]\s*/u, '').trim() : '';
+}
+
+function generateOutfits() {
+  const occasion = getSelected('occasion');
+  const aesthetic = getSelected('aesthetic');
+  const season = getSelected('season');
+
+  const outfits = lookupOutfits(aesthetic, occasion, season);
+  renderOutfits(outfits, occasion, aesthetic, season);
+}
+
+function renderOutfits(outfits, occasion, aesthetic, season) {
+  const resultsArea = document.getElementById('resultsArea');
+
+  const summaryBar = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:0.72rem;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;align-self:center">Styled for</span>
+      ${[occasion, aesthetic, season].map(t => `<span style="background:var(--chip-bg);border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:0.72rem;color:var(--muted)">${t}</span>`).join('')}
+    </div>`;
+
+  const cards = outfits.map((o, i) => `
+    <div class="outfit-card" style="animation-delay:${i * 0.08}s">
+      <div class="card-header">
+        <div class="style-badge">
+          <div class="style-dot"></div>
+          <div class="style-name">${o.name}</div>
+        </div>
+        <div class="vibe-tag">${o.vibe}</div>
+      </div>
+      <div class="card-body">
+        <div class="outfit-items">
+          ${o.items.map(item => `
+            <div class="item-pill">
+              <span class="pi">${item.emoji}</span>
+              <span>${item.description}</span>
+            </div>`).join('')}
+        </div>
+        <div class="stylist-tip">
+          <span class="tip-label">✦ Tip</span>
+          <span>${o.tip}</span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  resultsArea.innerHTML = summaryBar + cards;
+}
+</script>
+</body>
+</html>
