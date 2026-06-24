@@ -1,0 +1,1 @@
+This is the fashion website I'm trying to create, the first one (Original fashion app html), I made it trying to play around with colours and cards, just trng to improve my yhtml.Both the second an third ones are the improved versions of the first one with more of a database and better aesthetics in general.
