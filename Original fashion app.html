@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outfit curator</title>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=BWBmxk_ZzriwXtKT0tGisj56CKCE1sdjGV1GsDc7oEln8jJcHFXBdLxdCy6NS8KShXFiYVUHivFQkY_2ekKcT1KmQs_dp8b-HT81V_VAFuPGmVGWU0da_Hj_Z2izhHHJheTLeuay3mhr8uUT0jk9I3DhcXAH4TS4djmv0ptOe6Ji8VR0V5MaRxJp9GVb2SqD-g7BDHQqPoG2dt6kLHUPIIribgze-VSY-ZBgYZxmakYDDPezq7wNmHrNZgE-KMCfxTntEOtXs00UAnmWAR8PJQkxWQFSAyyczpc-uOmgDIZ62sdKEwJU1kVD1h3oGEyR" charset="UTF-8"></script><style>
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#1a102b,#2d1457);
+  color:white;
+  margin:0;
+  padding:30px;
+}
+.container{max-width:900px;margin:auto}
+.card{
+  background:rgba(255,255,255,0.08);
+  border:1px solid #8b5cf6;
+  border-radius:16px;
+  padding:16px;
+  margin-top:12px;
+}
+h1{color:#c084fc}
+button{
+  background:#8b5cf6;
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+}
+img{
+  max-width:250px;
+  margin-top:15px;
+  border-radius:12px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>👗 Outfit Curator</h1>
+<p>Upload a clothing item and generate outfit ideas.</p>
+
+<input type="file" id="upload" accept="image/*">
+<br><br>
+<button onclick="generateOutfits()">Generate Outfits</button>
+
+<div id="preview"></div>
+<div id="results"></div>
+</div>
+
+<script>
+const outfitIdeas = [
+{
+style:"Minimalist",
+look:"White oversized shirt, black trousers, white sneakers"
+},
+{
+style:"Streetwear",
+look:"Graphic tee, cargo pants, chunky sneakers"
+},
+{
+style:"Old Money",
+look:"Oxford shirt, beige chinos, brown loafers"
+},
+{
+style:"Scandinavian",
+look:"Grey knit sweater, relaxed jeans, leather sneakers"
+},
+{
+style:"Smart Casual",
+look:"Navy blazer, white tee, tailored trousers"
+}
+];
+
+document.getElementById("upload").addEventListener("change", e=>{
+ const file=e.target.files[0];
+ if(!file) return;
+
+ const reader=new FileReader();
+ reader.onload=function(evt){
+   document.getElementById("preview").innerHTML =
+     `<img src="${evt.target.result}" alt="uploaded item">`;
+ }
+ reader.readAsDataURL(file);
+});
+
+function generateOutfits(){
+ const results=document.getElementById("results");
+
+ results.innerHTML=outfitIdeas.map(o=>`
+   <div class="card">
+      <h3>${o.style}</h3>
+      <p>${o.look}</p>
+   </div>
+ `).join("");
+}
+</script>
+</body>
+</html>
